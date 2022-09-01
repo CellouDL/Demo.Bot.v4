@@ -3,6 +3,11 @@
 //
 // Generated with Bot Builder V4 SDK Template for Visual Studio EchoBot v4.16.0
 
+using System.Net.Http.Headers;
+using System.Net.Mime;
+using Demo.Bot.v4.Bots;
+using Demo.Bot.v4.Dialogs;
+using Demo.Bot.v4.Helpers;
 using Demo.Bot.v4.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -38,18 +43,24 @@ namespace Demo.Bot.v4
 
             services.AddSingleton<IStorage, MemoryStorage>();
 
-            // For production and permanent storage we can use Azure blob storage as IStorageProvider
-            //var          connectionString = Configuration.GetValue<string>("BlobStorageConnectionString");
-            //const string container        = "mybotstatedata";
-            //var          blobsStorage     = new BlobsStorage(connectionString, container);
-            //services.AddSingleton<IStorage>(blobsStorage);
+            // Github API
+            services.AddHttpClient<GithubApi>(client =>
+            {
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(MediaTypeNames.Application.Json));
+                client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("bot-demo", "1.0"));
+            });
 
+            // User state 
             services.AddSingleton<UserState>();
+
+            // Conversation state 
             services.AddSingleton<ConversationState>();
+            // Create an instance of the state service 
             services.AddSingleton<StateService>();
+            services.AddSingleton<MainDialog>();
 
             // Create the bot as a transient. In this case the ASP Controller is expecting an IBot.
-            services.AddTransient<IBot, Bots.GreetingBot>();
+            services.AddTransient<IBot, DialogBot<MainDialog>>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
